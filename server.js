@@ -1,6 +1,7 @@
 const express = require('express');
 const cors = require('cors');
 require('dotenv').config();
+const db = require('./db');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -14,6 +15,23 @@ app.get('/', (req, res) => {
     version: '1.0.0',
     documentation: '/docs'
   });
+});
+
+// Health check endpoint
+app.get('/api/health', async (req, res) => {
+  try {
+    const result = await db.query('SELECT NOW()');
+    res.json({
+      status: 'healthy',
+      timestamp: result.rows[0].now,
+      uptime: process.uptime()
+    });
+  } catch (err) {
+    res.status(500).json({
+      status: 'unhealthy',
+      error: err.message
+    });
+  }
 });
 
 if (process.env.NODE_ENV !== 'test') {
