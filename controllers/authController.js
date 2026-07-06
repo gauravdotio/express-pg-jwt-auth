@@ -1,4 +1,6 @@
 const userDb = require('../db/userDb');
+const bcrypt = require('bcryptjs');
+const { generateToken } = require('../utils/jwt');
 
 async function register(req, res, next) {
   try {
@@ -27,6 +29,41 @@ async function register(req, res, next) {
   }
 }
 
+async function login(req, res, next) {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ error: 'Email and password are required' });
+    }
+
+    const user = await userDb.findUserByEmail(email);
+    if (!user) {
+      return res.status(401).json({ error: 'Invalid email or password' });
+    }
+
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(401).json({ error: 'Invalid email or password' });
+    }
+
+    const token = generateToken({ id: user.id, email: user.email });
+    
+    return res.json({
+      message: 'Login successful',
+      token,
+      user: {
+        id: user.id,
+        name: user.name,
+        email: user.email
+      }
+    });
+  } catch (error) {
+    next(error);
+  }
+}
+
 module.exports = {
-  register
+  register,
+  login
 };
