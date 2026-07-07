@@ -63,7 +63,17 @@ async function login(req, res, next) {
   }
 }
 
+async function getProfile(req, res, next) {
+  try {
+    // req.user is loaded by authentication middleware
+    return res.json({ user: req.user });
+  } catch (error) {
+    next(error);
+  }
+}
+
 module.exports = {
   register,
-  login
+  login,
+  getProfile
 };
