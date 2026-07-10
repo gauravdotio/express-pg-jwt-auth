@@ -18,13 +18,34 @@ async function createTask(title, description, status, priority, projectId, assig
   return rows[0];
 }
 
-async function getTasksByProject(projectId, ownerId) {
+async function getTasksByProject(projectId, ownerId, filters = {}) {
   const projectCheck = 'SELECT id FROM projects WHERE id = $1 AND owner_id = $2';
   const checkRes = await db.query(projectCheck, [projectId, ownerId]);
   if (checkRes.rows.length === 0) return null;
 
-  const queryText = 'SELECT * FROM tasks WHERE project_id = $1 ORDER BY created_at DESC';
-  const { rows } = await db.query(queryText, [projectId]);
+  const queryClauses = ['project_id = $1'];
+  const values = [projectId];
+  let index = 2;
+
+  if (filters.status) {
+    queryClauses.push(`status = $${index}`);
+    values.push(filters.status);
+    index++;
+  }
+
+  if (filters.priority) {
+    queryClauses.push(`priority = $${index}`);
+    values.push(filters.priority);
+    index++;
+  }
+
+  const queryText = `
+    SELECT * FROM tasks
+    WHERE ${queryClauses.join(' AND ')}
+    ORDER BY created_at DESC
+  `;
+  
+  const { rows } = await db.query(queryText, values);
   return rows;
 }
 

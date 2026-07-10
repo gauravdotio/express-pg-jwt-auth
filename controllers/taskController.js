@@ -4,7 +4,9 @@ const projectDb = require('../db/projectDb');
 async function getProjectTasks(req, res, next) {
   try {
     const { projectId } = req.params;
-    const tasks = await taskDb.getTasksByProject(projectId, req.user.id);
+    const { status, priority } = req.query;
+    
+    const tasks = await taskDb.getTasksByProject(projectId, req.user.id, { status, priority });
     if (tasks === null) {
       return res.status(403).json({ error: 'Unauthorized project access or project not found' });
     }
