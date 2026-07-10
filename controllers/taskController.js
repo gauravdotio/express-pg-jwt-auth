@@ -23,7 +23,6 @@ async function createProjectTask(req, res, next) {
       return res.status(400).json({ error: 'Task title is required' });
     }
 
-    // Verify project belongs to authenticated user
     const project = await projectDb.getProjectById(projectId, req.user.id);
     if (!project) {
       return res.status(403).json({ error: 'Unauthorized project access or project not found' });
@@ -36,7 +35,35 @@ async function createProjectTask(req, res, next) {
   }
 }
 
+async function updateTask(req, res, next) {
+  try {
+    const { id } = req.params;
+    const task = await taskDb.updateTask(id, req.body, req.user.id);
+    if (!task) {
+      return res.status(404).json({ error: 'Task not found or unauthorized' });
+    }
+    return res.json({ message: 'Task updated successfully', task });
+  } catch (error) {
+    next(error);
+  }
+}
+
+async function deleteTask(req, res, next) {
+  try {
+    const { id } = req.params;
+    const task = await taskDb.deleteTask(id, req.user.id);
+    if (!task) {
+      return res.status(404).json({ error: 'Task not found or unauthorized' });
+    }
+    return res.json({ message: 'Task deleted successfully', task });
+  } catch (error) {
+    next(error);
+  }
+}
+
 module.exports = {
   getProjectTasks,
-  createProjectTask
+  createProjectTask,
+  updateTask,
+  deleteTask
 };

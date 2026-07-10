@@ -16,6 +16,7 @@ app.use(express.json());
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/projects', projectRoutes);
+app.use('/api/tasks', taskRoutes); // Direct access for update/delete
 
 // Nest tasks under projects: /api/projects/:projectId/tasks
 projectRoutes.use('/:projectId/tasks', taskRoutes);
