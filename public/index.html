@@ -1,0 +1,436 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TaskFlow API Dashboard</title>
+  <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-gradient: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+      --card-bg: rgba(30, 41, 59, 0.7);
+      --border-color: rgba(255, 255, 255, 0.1);
+      --primary: #818cf8;
+      --secondary: #c084fc;
+      --text: #f1f5f9;
+      --text-muted: #94a3b8;
+      --success: #34d399;
+      --error: #f87171;
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Outfit', sans-serif;
+    }
+
+    body {
+      background: var(--bg-gradient);
+      color: var(--text);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 40px 20px;
+      overflow-x: hidden;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+
+    h1 {
+      font-size: 3rem;
+      font-weight: 800;
+      background: linear-gradient(to right, var(--primary), var(--secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 10px;
+    }
+
+    .subtitle {
+      color: var(--text-muted);
+      font-size: 1.2rem;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 1000px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+    }
+
+    @media (max-width: 768px) {
+      .container {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .card {
+      background: var(--card-bg);
+      backdrop-filter: blur(16px);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 30px;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 15px 35px rgba(129, 140, 248, 0.15);
+    }
+
+    h2 {
+      font-size: 1.5rem;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      color: var(--primary);
+    }
+
+    .form-group {
+      margin-bottom: 20px;
+    }
+
+    label {
+      display: block;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+      font-size: 0.9rem;
+    }
+
+    input, textarea, select {
+      width: 100%;
+      background: rgba(15, 23, 42, 0.6);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 12px;
+      color: var(--text);
+      font-size: 1rem;
+      transition: border-color 0.3s;
+    }
+
+    input:focus, textarea:focus, select:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+
+    button {
+      width: 100%;
+      background: linear-gradient(to right, var(--primary), var(--secondary));
+      color: white;
+      border: none;
+      border-radius: 8px;
+      padding: 14px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: opacity 0.3s, transform 0.2s;
+    }
+
+    button:hover {
+      opacity: 0.9;
+    }
+
+    button:active {
+      transform: scale(0.98);
+    }
+
+    .result-box {
+      margin-top: 20px;
+      background: rgba(15, 23, 42, 0.9);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 15px;
+      font-family: monospace;
+      font-size: 0.85rem;
+      max-height: 250px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 4px 8px;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+
+    .badge-post { background: #3b82f6; color: white; }
+    .badge-get { background: #10b981; color: white; }
+    .badge-put { background: #f59e0b; color: white; }
+    .badge-delete { background: #ef4444; color: white; }
+
+    .token-display {
+      background: rgba(248, 113, 113, 0.1);
+      border: 1px dashed var(--error);
+      color: var(--error);
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      word-break: break-all;
+      margin-bottom: 20px;
+      text-align: center;
+    }
+
+    .token-display.has-token {
+      background: rgba(52, 211, 153, 0.1);
+      border-color: var(--success);
+      color: var(--success);
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>TaskFlow API</h1>
+    <p class="subtitle">Sleek, secure REST API using Express, Postgres & JWT</p>
+  </header>
+
+  <div class="container">
+    <!-- Left Column: Authorization Simulator -->
+    <div class="card">
+      <h2>🔐 Authorization Control</h2>
+      <p style="color: var(--text-muted); margin-bottom: 20px; font-size: 0.95rem;">
+        Authenticate below to obtain a JWT token. The token will automatically be attached to subsequent API requests.
+      </p>
+
+      <div id="tokenStatus" class="token-display">
+        No active JWT token found. Register/login to generate one.
+      </div>
+
+      <form id="authForm">
+        <div class="form-group">
+          <label>Authentication Action</label>
+          <select id="authAction">
+            <option value="login">Login (/api/auth/login)</option>
+            <option value="register">Register (/api/auth/register)</option>
+            <option value="profile">Get Profile (/api/auth/me)</option>
+          </select>
+        </div>
+
+        <div id="nameGroup" class="form-group" style="display: none;">
+          <label>Name</label>
+          <input type="text" id="authName" placeholder="John Doe">
+        </div>
+
+        <div id="credentialsGroup">
+          <div class="form-group">
+            <label>Email</label>
+            <input type="email" id="authEmail" placeholder="user@example.com" value="user@example.com">
+          </div>
+          <div class="form-group">
+            <label>Password</label>
+            <input type="password" id="authPassword" placeholder="••••••" value="password123">
+          </div>
+        </div>
+
+        <button type="submit" id="authSubmit">Submit Authorization</button>
+      </form>
+
+      <div id="authResult" class="result-box" style="display: none;"></div>
+    </div>
+
+    <!-- Right Column: API Sandbox -->
+    <div class="card">
+      <h2>🚀 Project & Task Sandbox</h2>
+      <p style="color: var(--text-muted); margin-bottom: 20px; font-size: 0.95rem;">
+        Perform authenticated CRUD operations against projects and task boards.
+      </p>
+
+      <form id="sandboxForm">
+        <div class="form-group">
+          <label>Target API Endpoint</label>
+          <select id="sandboxAction">
+            <option value="listProjects">GET /api/projects (List projects)</option>
+            <option value="createProject">POST /api/projects (Create project)</option>
+            <option value="listTasks">GET /api/projects/:projectId/tasks (List tasks)</option>
+            <option value="createTask">POST /api/projects/:projectId/tasks (Create task)</option>
+            <option value="updateTask">PUT /api/tasks/:taskId (Update task status)</option>
+            <option value="deleteTask">DELETE /api/tasks/:taskId (Delete task)</option>
+          </select>
+        </div>
+
+        <div id="projectNameGroup" class="form-group" style="display: none;">
+          <label>Project Name</label>
+          <input type="text" id="projectName" placeholder="Acme Project">
+        </div>
+
+        <div id="projectIdGroup" class="form-group" style="display: none;">
+          <label>Project ID</label>
+          <input type="text" id="projectId" placeholder="1">
+        </div>
+
+        <div id="taskIdGroup" class="form-group" style="display: none;">
+          <label>Task ID</label>
+          <input type="text" id="taskId" placeholder="1">
+        </div>
+
+        <div id="taskFieldsGroup" style="display: none;">
+          <div class="form-group">
+            <label>Task Title</label>
+            <input type="text" id="taskTitle" placeholder="Build authentication layer">
+          </div>
+          <div class="form-group">
+            <label>Task Status</label>
+            <select id="taskStatus">
+              <option value="todo">To Do (todo)</option>
+              <option value="in_progress">In Progress (in_progress)</option>
+              <option value="done">Done (done)</option>
+            </select>
+          </div>
+        </div>
+
+        <button type="submit">Execute Sandbox Query</button>
+      </form>
+
+      <div id="sandboxResult" class="result-box" style="display: none;"></div>
+    </div>
+  </div>
+
+  <script>
+    let jwtToken = '';
+
+    const authAction = document.getElementById('authAction');
+    const nameGroup = document.getElementById('nameGroup');
+    const credentialsGroup = document.getElementById('credentialsGroup');
+    const authForm = document.getElementById('authForm');
+    const authResult = document.getElementById('authResult');
+    const tokenStatus = document.getElementById('tokenStatus');
+
+    authAction.addEventListener('change', () => {
+      if (authAction.value === 'register') {
+        nameGroup.style.display = 'block';
+        credentialsGroup.style.display = 'block';
+      } else if (authAction.value === 'login') {
+        nameGroup.style.display = 'none';
+        credentialsGroup.style.display = 'block';
+      } else {
+        nameGroup.style.display = 'none';
+        credentialsGroup.style.display = 'none';
+      }
+    });
+
+    authForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      authResult.style.display = 'block';
+      authResult.innerText = 'Loading...';
+
+      let url = '/api/auth/login';
+      let options = {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      };
+
+      if (authAction.value === 'register') {
+        url = '/api/auth/register';
+        options.body = JSON.stringify({
+          name: document.getElementById('authName').value,
+          email: document.getElementById('authEmail').value,
+          password: document.getElementById('authPassword').value
+        });
+      } else if (authAction.value === 'login') {
+        options.body = JSON.stringify({
+          email: document.getElementById('authEmail').value,
+          password: document.getElementById('authPassword').value
+        });
+      } else {
+        url = '/api/auth/me';
+        options.method = 'GET';
+        options.headers['Authorization'] = 'Bearer ' + jwtToken;
+      }
+
+      try {
+        const res = await fetch(url, options);
+        const data = await res.json();
+        authResult.innerText = JSON.stringify(data, null, 2);
+
+        if (data.token) {
+          jwtToken = data.token;
+          tokenStatus.innerText = 'Active JWT session loaded!';
+          tokenStatus.className = 'token-display has-token';
+        }
+      } catch (err) {
+        authResult.innerText = 'Network error: ' + err.message;
+      }
+    });
+
+    // Sandbox Controller UI changes
+    const sandboxAction = document.getElementById('sandboxAction');
+    const projectNameGroup = document.getElementById('projectNameGroup');
+    const projectIdGroup = document.getElementById('projectIdGroup');
+    const taskIdGroup = document.getElementById('taskIdGroup');
+    const taskFieldsGroup = document.getElementById('taskFieldsGroup');
+    const sandboxForm = document.getElementById('sandboxForm');
+    const sandboxResult = document.getElementById('sandboxResult');
+
+    sandboxAction.addEventListener('change', () => {
+      const action = sandboxAction.value;
+      projectNameGroup.style.display = action === 'createProject' ? 'block' : 'none';
+      projectIdGroup.style.display = (action === 'listTasks' || action === 'createTask') ? 'block' : 'none';
+      taskIdGroup.style.display = (action === 'updateTask' || action === 'deleteTask') ? 'block' : 'none';
+      taskFieldsGroup.style.display = (action === 'createTask' || action === 'updateTask') ? 'block' : 'none';
+    });
+
+    sandboxForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      sandboxResult.style.display = 'block';
+      sandboxResult.innerText = 'Loading...';
+
+      const action = sandboxAction.value;
+      let url = '/api/projects';
+      let options = {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + jwtToken
+        }
+      };
+
+      if (action === 'createProject') {
+        options.method = 'POST';
+        options.body = JSON.stringify({
+          name: document.getElementById('projectName').value || 'New Project'
+        });
+      } else if (action === 'listTasks') {
+        const pid = document.getElementById('projectId').value || '1';
+        url = `/api/projects/${pid}/tasks`;
+      } else if (action === 'createTask') {
+        const pid = document.getElementById('projectId').value || '1';
+        url = `/api/projects/${pid}/tasks`;
+        options.method = 'POST';
+        options.body = JSON.stringify({
+          title: document.getElementById('taskTitle').value || 'Sample Task',
+          status: document.getElementById('taskStatus').value
+        });
+      } else if (action === 'updateTask') {
+        const tid = document.getElementById('taskId').value || '1';
+        url = `/api/tasks/${tid}`;
+        options.method = 'PUT';
+        options.body = JSON.stringify({
+          status: document.getElementById('taskStatus').value
+        });
+      } else if (action === 'deleteTask') {
+        const tid = document.getElementById('taskId').value || '1';
+        url = `/api/tasks/${tid}`;
+        options.method = 'DELETE';
+      }
+
+      try {
+        const res = await fetch(url, options);
+        const data = await res.json();
+        sandboxResult.innerText = JSON.stringify(data, null, 2);
+      } catch (err) {
+        sandboxResult.innerText = 'Query error: ' + err.message;
+      }
+    });
+  </script>
+</body>
+</html>
