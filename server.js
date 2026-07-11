@@ -6,6 +6,7 @@ const db = require('./db');
 const authRoutes = require('./routes/authRoutes');
 const projectRoutes = require('./routes/projectRoutes');
 const taskRoutes = require('./routes/taskRoutes');
+const errorHandler = require('./middleware/error');
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -16,7 +17,7 @@ app.use(express.json());
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/projects', projectRoutes);
-app.use('/api/tasks', taskRoutes); // Direct access for update/delete
+app.use('/api/tasks', taskRoutes);
 
 // Nest tasks under projects: /api/projects/:projectId/tasks
 projectRoutes.use('/:projectId/tasks', taskRoutes);
@@ -44,6 +45,9 @@ app.get('/api/health', async (req, res) => {
     });
   }
 });
+
+// Register Global Error Handling Middleware
+app.use(errorHandler);
 
 if (process.env.NODE_ENV !== 'test') {
   app.listen(PORT, () => {
