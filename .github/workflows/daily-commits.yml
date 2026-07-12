@@ -1,0 +1,40 @@
+name: Daily Commits Automation
+
+on:
+  schedule:
+    - cron: '15 10 * * *'
+    - cron: '30 16 * * *'
+  workflow_dispatch:
+
+jobs:
+  commit:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Make daily commit
+        run: |
+          START_DATE="2026-07-12"
+          # Calculate days elapsed since start date
+          START_SEC=$(date -d "$START_DATE" +%s)
+          CURRENT_SEC=$(date +%s)
+          DIFF_DAYS=$(( (CURRENT_SEC - START_SEC) / 86400 ))
+          
+          echo "Days elapsed since start: $DIFF_DAYS"
+          
+          if [ $DIFF_DAYS -lt 30 ]; then
+            DAY_NUM=$(( DIFF_DAYS + 1 ))
+            TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+            echo "Day $DAY_NUM - Commit at $TIMESTAMP" >> commit_activity.txt
+            
+            git config --global user.name "github-actions[bot]"
+            git config --global user.email "github-actions[bot]@users.noreply.github.com"
+            git add commit_activity.txt
+            git commit -m "chore: automated activity log day $DAY_NUM [skip ci]"
+            git push
+          else
+            echo "30 days period has completed. No commit made."
+          fi
