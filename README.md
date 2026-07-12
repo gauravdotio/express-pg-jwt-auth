@@ -1,6 +1,6 @@
-# TaskFlow API - 10 Day Green-Streak Project
+# TaskFlow API
 
-A secure, premium task and project management REST API built with Express, PostgreSQL, and JWT. This repository features a complete step-by-step history spanning 10 days with exactly 2 commits per day to keep your GitHub contribution graph active and green.
+A secure, premium task and project management REST API built with Express, PostgreSQL, and JWT. This repository features a clean modular codebase with token authentication, database connection pooling, error handling middleware, and integration testing.
 
 ## 🚀 Technology Stack
 - **Framework**: Express.js (Node.js)

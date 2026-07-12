@@ -20,22 +20,22 @@ async function seedData() {
     // Insert mock user
     const userRes = await client.query(`
       INSERT INTO users (name, email, password)
-      VALUES ('Consistent Developer', 'user@example.com', $1)
+      VALUES ('Alex Mercer', 'user@example.com', $1)
       RETURNING id
     `, [hashedPassword]);
     
     const userId = userRes.rows[0].id;
-    console.log('Created user consistent developer: user@example.com / password123');
+    console.log('Created user Alex Mercer: user@example.com / password123');
 
     // Insert mock project
     const projectRes = await client.query(`
       INSERT INTO projects (name, description, owner_id)
-      VALUES ('GitHub Green Streak Tracker', 'A tracker to keep contributions high', $1)
+      VALUES ('TaskFlow Backend Service', 'A RESTful API endpoint management service', $1)
       RETURNING id
     `, [userId]);
     
     const projectId = projectRes.rows[0].id;
-    console.log('Created project: GitHub Green Streak Tracker');
+    console.log('Created project: TaskFlow Backend Service');
 
     // Insert mock tasks
     await client.query(`
